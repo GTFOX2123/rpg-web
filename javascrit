@@ -1,0 +1,134 @@
+  log(`Inimigo atacou e causou ${damage} de dano!`);
+
+  updateStatus();
+  saveGame();
+
+  setTimeout(() => {
+    if(player.hp <= 0) {
+      playerLose();
+    } else {
+      disableButtons(false);
+      log('Sua vez de atacar!');
+    }
+  }, 900);
+}
+
+// Jogador venceu
+function playerWin() {
+  winSound.play();
+  log('Você venceu! Ganhou XP e poção!');
+  player.xp += 50;
+  inventory.potions++;
+  checkLevelUp();
+  resetEnemy();
+  updateInventory();
+  updateStatus();
+  saveGame();
+  disableButtons(false);
+}
+
+// Jogador perdeu
+function playerLose() {
+  loseSound.play();
+  log('Você perdeu! Jogo será reiniciado.');
+  setTimeout(resetGame, 3000);
+}
+
+// Checa se subiu de nível
+function checkLevelUp() {
+  while(player.xp >= player.xpToNext) {
+    player.xp -= player.xpToNext;
+    player.level++;
+    player.maxHP += 20;
+    player.hp = player.maxHP;
+    player.maxMP += 10;
+    player.mp = player.maxMP;
+    player.attackMin += 5;
+    player.attackMax += 5;
+    player.xpToNext = Math.floor(player.xpToNext * 1.5);
+    log(`Parabéns! Você subiu para o nível ${player.level}!`);
+  }
+}
+
+// Reinicia inimigo com status aumentado
+function resetEnemy() {
+  enemy.level = player.level;
+  enemy.maxHP = 80 + (enemy.level - 1) * 30;
+  enemy.hp = enemy.maxHP;
+  enemy.attackMin = 6 + (enemy.level - 1) * 4;
+  enemy.attackMax = 12 + (enemy.level - 1) * 5;
+}
+
+// Reinicia jogo
+function resetGame() {
+  player = {
+    maxHP: 100,
+    hp: 100,
+    maxMP: 50,
+    mp: 50,
+    level: 1,
+    xp: 0,
+    xpToNext: 100,
+    attackMin: 10,
+    attackMax: 20,
+    specialCost: 20,
+    healCost: 20
+  };
+  enemy = {
+    maxHP: 100,
+    hp: 100,
+    level: 1,
+    attackMin: 8,
+    attackMax: 18
+  };
+  inventory = { potions: 3 };
+  log('Jogo reiniciado. Boa sorte!');
+  updateInventory();
+  updateStatus();
+  saveGame();
+  disableButtons(false);
+}
+
+// Desabilita/Ativa botões para evitar clicks rápidos
+function disableButtons(disabled) {
+  attackBtn.disabled = disabled;
+  specialBtn.disabled = disabled || player.mp < player.specialCost;
+  healBtn.disabled = disabled || player.mp < player.healCost;
+  inventoryList.style.pointerEvents = disabled ? 'none' : 'auto';
+}
+
+// Animação ataque
+function animateAttack(attacker, target, special = false) {
+  attacker.style.animation = 'attack-move 0.5s ease forwards';
+  setTimeout(() => {
+    attacker.style.animation = '';
+    target.style.animation = 'hurt-shake 0.5s ease forwards';
+    setTimeout(() => {
+      target.style.animation = '';
+    }, 500);
+  }, 500);
+}
+
+// Animação cura
+function animateHeal(character) {
+  character.style.filter = 'brightness(1.5)';
+  setTimeout(() => {
+    character.style.filter = '';
+  }, 600);
+}
+
+// Som de efeito
+function playSound(sound) {
+  sound.currentTime = 0;
+  sound.play();
+}
+
+// Gera número aleatório inteiro entre min e max (inclusive)
+function random(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Inicializa o jogo carregando dados salvos ou começando novo
+window.onload = function() {
+  loadGame();
+};
