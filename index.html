@@ -2,372 +2,265 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>RPG com Salvamento Local</title>
+  <title>RPG por Turnos</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
-      background: #121212 url('https://i.imgur.com/zQZRW5E.jpg') no-repeat center center fixed;
-      background-size: cover;
+      background: #121212 url('background.png') no-repeat center/cover;
       color: #fff;
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
     }
     .container {
-      margin-top: 40px;
-      background-color: rgba(0, 0, 0, 0.75);
+      margin: 50px auto;
+      background-color: rgba(0,0,0,0.8);
       padding: 30px;
       border-radius: 15px;
-      display: inline-block;
-      box-shadow: 0 0 20px rgba(0,0,0,0.9);
-      width: 360px;
+      width: 420px;
+      box-shadow: 0 0 30px #00ff9d;
+    }
+    h1, h3 {
+      margin-bottom: 15px;
     }
     .status {
       display: flex;
       justify-content: space-around;
       align-items: center;
-      margin-bottom: 20px;
+      margin: 25px 0;
     }
     .character {
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative;
-    }
-    .bar {
-      width: 140px;
-      height: 18px;
-      background: #444;
-      border: 1px solid #999;
-      margin: 6px 0;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    .bar-inner {
-      height: 100%;
-      background: limegreen;
-      width: 100%;
-      transition: width 0.4s ease;
-      border-radius: 6px 0 0 6px;
-    }
-    .bar-inner.hp {
-      background: #e74c3c;
-    }
-    .bar-inner.xp {
-      background: #3498db;
+      width: 150px;
     }
     img.sprite {
       image-rendering: pixelated;
       width: 96px;
       height: 96px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       transition: transform 0.3s;
     }
+    .bar {
+      width: 140px;
+      height: 20px;
+      background: #333;
+      border-radius: 10px;
+      border: 1px solid #777;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+    .bar-inner {
+      height: 100%;
+      background: limegreen;
+      border-radius: 10px 0 0 10px;
+      transition: width 0.4s ease;
+    }
     button {
-      padding: 10px 18px;
-      margin: 6px 8px 12px 8px;
-      font-size: 14px;
-      cursor: pointer;
-      background: #2980b9;
+      margin: 6px;
+      padding: 10px 22px;
+      font-size: 16px;
       border: none;
       border-radius: 8px;
-      color: white;
-      transition: background 0.3s;
-      user-select: none;
+      background: #0077ff;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s;
     }
     button:hover:not(:disabled) {
-      background: #3498db;
+      background-color: #3399ff;
     }
     button:disabled {
-      background: #555;
-      cursor: default;
+      background-color: #555;
+      cursor: not-allowed;
     }
     #log {
-      min-height: 60px;
-      margin: 12px 0;
+      min-height: 30px;
+      margin: 20px 0;
       font-weight: bold;
-      font-size: 16px;
-      height: 60px;
     }
     .inventory {
-      background: rgba(255,255,255,0.12);
-      padding: 10px;
+      background: rgba(255,255,255,0.1);
       border-radius: 10px;
-      max-width: 340px;
+      padding: 12px;
+      max-width: 380px;
       margin: 0 auto;
       text-align: left;
     }
-    .inventory h3 {
-      margin-top: 0;
+    .shake {
+      animation: shake 0.3s;
     }
-    .inventory ul {
-      padding-left: 20px;
+    .bounce {
+      animation: bounce 0.4s;
     }
-    .inventory li {
-      cursor: pointer;
-      user-select: none;
-      margin-bottom: 6px;
-      transition: background-color 0.25s;
-      padding: 2px 6px;
-      border-radius: 5px;
-    }
-    .inventory li:hover {
-      background-color: rgba(255, 255, 255, 0.25);
-    }
-    @keyframes attack-move {
-      0% { transform: translateX(0); }
-      50% { transform: translateX(15px); }
-      100% { transform: translateX(0); }
-    }
-    @keyframes hurt-shake {
+    @keyframes shake {
       0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-10px); }
-      40%, 80% { transform: translateX(10px); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-8px); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>RPG com Salvamento Local</h1>
+    <h1>RPG por Turnos</h1>
+    <h3>Nível: <span id="playerLevel">1</span></h3>
     <div class="status">
       <div class="character">
-        <img id="hero" class="sprite" src="https://i.imgur.com/NbP1N3D.png" alt="Herói" />
-        <div class="bar" title="HP">
-          <div id="playerHPBar" class="bar-inner hp"></div>
-        </div>
-        <p>HP: <span id="playerHP">100</span> / 100</p>
-        <div class="bar" title="XP">
-          <div id="playerXPBar" class="bar-inner xp"></div>
-        </div>
-        <p>Nível: <span id="playerLevel">1</span></p>
-        <p>MP: <span id="playerMP">50</span> / 50</p>
+        <img id="hero" src="hero.png" alt="Herói" class="sprite" />
+        <div class="bar"><div id="playerBar" class="bar-inner"></div></div>
+        <p id="playerHP">HP: 100 / 100</p>
       </div>
-
       <div class="character">
-        <img id="enemy" class="sprite" src="https://i.imgur.com/3KXQZ92.png" alt="Inimigo" />
-        <div class="bar" title="HP">
-          <div id="enemyHPBar" class="bar-inner hp"></div>
-        </div>
-        <p>HP: <span id="enemyHP">100</span> / 100</p>
-        <p>Inimigo Nível: <span id="enemyLevel">1</span></p>
+        <img id="enemy" src="enemy.png" alt="Inimigo" class="sprite" />
+        <div class="bar"><div id="enemyBar" class="bar-inner"></div></div>
+        <p id="enemyHP">HP: 100 / 100</p>
       </div>
     </div>
-
     <div id="actions">
-      <button onclick="attack()" id="attackBtn">Ataque Normal</button>
-      <button onclick="specialAttack()" id="specialBtn">Ataque Especial (20 de MP)</button>
-      <button onclick="heal()" id="healBtn">Curar (20 de MP)</button>
-      <button onclick="resetGame()" style="background:#c0392b; margin-top:10px;">Reiniciar Jogo</button>
+      <button id="btnAttack">Atacar</button>
+      <button id="btnDefend">Defender</button>
+      <button id="btnHeal">Curar</button>
     </div>
-
     <p id="log"></p>
-
     <div class="inventory">
-      <h3>Inventário (clique para usar poção)</h3>
-      <ul id="inventoryList"></ul>
+      <h3>Inventário</h3>
+      <ul id="inventoryList">
+        <li>Poção de Vida (x1)</li>
+        <li>Espada de Madeira</li>
+      </ul>
     </div>
 
-    <audio id="attackSound" src="https://freesound.org/data/previews/341/341695_6247570-lq.mp3"></audio>
-    <audio id="healSound" src="https://freesound.org/data/previews/146/146721_2615116-lq.mp3"></audio>
-    <audio id="winSound" src="https://freesound.org/data/previews/170/170410_2437358-lq.mp3"></audio>
-    <audio id="loseSound" src="https://freesound.org/data/previews/198/198841_2859978-lq.mp3"></audio>
+    <audio id="attackSound" src="attack.mp3"></audio>
+    <audio id="winSound" src="win.mp3"></audio>
+    <audio id="loseSound" src="lose.mp3"></audio>
   </div>
 
   <script>
-    let player = {
-      maxHP: 100,
-      hp: 100,
-      maxMP: 50,
-      mp: 50,
-      level: 1,
-      xp: 0,
-      xpToNext: 100,
-      attackMin: 10,
-      attackMax: 20,
-      specialCost: 20,
-      healCost: 20
-    };
+    // Estados
+    let maxHP = 100;
+    let playerHP = maxHP;
+    let enemyHP = maxHP;
+    let defending = false;
+    let playerLevel = 1;
 
-    let enemy = {
-      maxHP: 100,
-      hp: 100,
-      level: 1,
-      attackMin: 8,
-      attackMax: 18
-    };
+    // Elementos
+    const playerBar = document.getElementById('playerBar');
+    const enemyBar = document.getElementById('enemyBar');
+    const playerHPText = document.getElementById('playerHP');
+    const enemyHPText = document.getElementById('enemyHP');
+    const logText = document.getElementById('log');
+    const heroImg = document.getElementById('hero');
+    const enemyImg = document.getElementById('enemy');
 
-    let inventory = {
-      potions: 3
-    };
+    const btnAttack = document.getElementById('btnAttack');
+    const btnDefend = document.getElementById('btnDefend');
+    const btnHeal = document.getElementById('btnHeal');
 
     const attackSound = document.getElementById('attackSound');
-    const healSound = document.getElementById('healSound');
     const winSound = document.getElementById('winSound');
     const loseSound = document.getElementById('loseSound');
 
-    const heroSprite = document.getElementById('hero');
-    const enemySprite = document.getElementById('enemy');
-
-    const attackBtn = document.getElementById('attackBtn');
-    const specialBtn = document.getElementById('specialBtn');
-    const healBtn = document.getElementById('healBtn');
-    const inventoryList = document.getElementById('inventoryList');
-
-    const logEl = document.getElementById('log');
-
-    // Salva dados no localStorage
-    function saveGame() {
-      const data = {
-        player, enemy, inventory
-      };
-      localStorage.setItem('rpgSave', JSON.stringify(data));
-    }
-
-    // Carrega dados do localStorage se existirem
-    function loadGame() {
-      const data = localStorage.getItem('rpgSave');
-      if (data) {
-        const parsed = JSON.parse(data);
-        player = parsed.player;
-        enemy = parsed.enemy;
-        inventory = parsed.inventory;
-        log('Jogo carregado do salvamento!');
-      } else {
-        log('Novo jogo iniciado. Sua vez!');
-      }
-      updateStatus();
-      updateInventory();
-      disableButtons(false);
-    }
-
-    // Atualiza as barras e textos do status
-    function updateStatus() {
-      document.getElementById('playerHP').textContent = player.hp;
-      document.getElementById('playerLevel').textContent = player.level;
-      document.getElementById('playerHPBar').style.width = (player.hp / player.maxHP * 100) + '%';
-      document.getElementById('playerXPBar').style.width = (player.xp / player.xpToNext * 100) + '%';
-      document.getElementById('playerMP').textContent = player.mp;
-
-      document.getElementById('enemyHP').textContent = enemy.hp;
-      document.getElementById('enemyHPBar').style.width = (enemy.hp / enemy.maxHP * 100) + '%';
-      document.getElementById('enemyLevel').textContent = enemy.level;
-
-      specialBtn.disabled = player.mp < player.specialCost;
-      healBtn.disabled = player.mp < player.healCost;
-    }
-
-    // Atualiza inventário visual
-    function updateInventory() {
-      inventoryList.innerHTML = '';
-      if(inventory.potions > 0) {
-        const li = document.createElement('li');
-        li.textContent = `Poção de Vida (x${inventory.potions})`;
-        li.onclick = () => {
-          usePotion();
-          saveGame();
-        };
-        inventoryList.appendChild(li);
-      } else {
-        const li = document.createElement('li');
-        li.textContent = 'Sem poções';
-        inventoryList.appendChild(li);
-      }
+    function updateUI() {
+      playerBar.style.width = (playerHP / maxHP * 100) + '%';
+      enemyBar.style.width = (enemyHP / maxHP * 100) + '%';
+      playerHPText.textContent = `HP: ${playerHP} / ${maxHP}`;
+      enemyHPText.textContent = `HP: ${enemyHP} / ${maxHP}`;
     }
 
     function log(msg) {
-      logEl.textContent = msg;
+      logText.textContent = msg;
     }
 
-    // Jogador ataca inimigo
+    function disableButtons(state) {
+      btnAttack.disabled = state;
+      btnDefend.disabled = state;
+      btnHeal.disabled = state;
+    }
+
+    function playAnimation(el, animClass, duration = 400) {
+      el.classList.add(animClass);
+      setTimeout(() => el.classList.remove(animClass), duration);
+    }
+
+    function checkEnd() {
+      if (enemyHP <= 0) {
+        log("Você venceu a batalha!");
+        winSound.play();
+        disableButtons(true);
+        playerLevel++;
+        document.getElementById('playerLevel').textContent = playerLevel;
+        return true;
+      }
+      if (playerHP <= 0) {
+        log("Você foi derrotado...");
+        loseSound.play();
+        disableButtons(true);
+        return true;
+      }
+      return false;
+    }
+
+    function enemyTurn() {
+      disableButtons(true);
+      setTimeout(() => {
+        let damage = Math.floor(Math.random() * 15 + 5);
+        if (defending) {
+          damage = Math.floor(damage / 2);
+          log("Você defendeu o ataque inimigo!");
+        } else {
+          log(`O inimigo atacou e causou ${damage} de dano!`);
+        }
+        playerHP = Math.max(0, playerHP - damage);
+        updateUI();
+        playAnimation(enemyImg, 'bounce');
+        playAnimation(heroImg, 'shake');
+        defending = false;
+        if (!checkEnd()) disableButtons(false);
+      }, 1200);
+    }
+
     function attack() {
       disableButtons(true);
-      let damage = random(player.attackMin, player.attackMax);
-      playSound(attackSound);
-      animateAttack(heroSprite, enemySprite);
-
-      enemy.hp = Math.max(0, enemy.hp - damage);
+      let damage = Math.floor(Math.random() * 20 + 10);
+      enemyHP = Math.max(0, enemyHP - damage);
+      updateUI();
       log(`Você atacou e causou ${damage} de dano!`);
+      attackSound.play();
+      playAnimation(heroImg, 'bounce');
+      playAnimation(enemyImg, 'shake');
 
-      updateStatus();
-      saveGame();
-
-      setTimeout(() => {
-        if(enemy.hp <= 0) {
-          playerWin();
-        } else {
-          enemyTurn();
-        }
-      }, 900);
+      if (!checkEnd()) enemyTurn();
     }
 
-    // Ataque especial
-    function specialAttack() {
-      if(player.mp < player.specialCost) {
-        log('MP insuficiente para ataque especial!');
-        return;
-      }
-      disableButtons(true);
-      player.mp -= player.specialCost;
-      let damage = random(player.attackMax + 10, player.attackMax + 20);
-      playSound(attackSound);
-      animateAttack(heroSprite, enemySprite, true);
-
-      enemy.hp = Math.max(0, enemy.hp - damage);
-      log(`Ataque especial! Você causou ${damage} de dano!`);
-
-      updateStatus();
-      saveGame();
-
-      setTimeout(() => {
-        if(enemy.hp <= 0) {
-          playerWin();
-        } else {
-          enemyTurn();
-        }
-      }, 1100);
+    function defend() {
+      log("Você está defendendo! O próximo ataque inimigo será reduzido.");
+      defending = true;
+      enemyTurn();
     }
 
-    // Curar jogador
     function heal() {
-      if(player.mp < player.healCost) {
-        log('MP insuficiente para curar!');
-        return;
-      }
       disableButtons(true);
-      player.mp -= player.healCost;
-      let healAmount = random(25, 40);
-      player.hp = Math.min(player.maxHP, player.hp + healAmount);
-      playSound(healSound);
-      animateHeal(heroSprite);
-      log(`Você se curou em ${healAmount} pontos!`);
-
-      updateStatus();
-      saveGame();
-
-      setTimeout(enemyTurn, 1000);
+      const healAmount = Math.floor(Math.random() * 20 + 10);
+      playerHP = Math.min(maxHP, playerHP + healAmount);
+      updateUI();
+      log(`Você usou uma poção e curou ${healAmount} de HP.`);
+      playAnimation(heroImg, 'bounce');
+      enemyTurn();
     }
 
-    // Usar poção
-    function usePotion() {
-      if(inventory.potions <= 0) {
-        log('Sem poções para usar!');
-        return;
-      }
-      inventory.potions--;
-      let healAmount = 50;
-      player.hp = Math.min(player.maxHP, player.hp + healAmount);
-      playSound(healSound);
-      animateHeal(heroSprite);
-      log(`Você usou uma poção e recuperou ${healAmount} HP!`);
+    // Eventos
+    btnAttack.addEventListener('click', attack);
+    btnDefend.addEventListener('click', defend);
+    btnHeal.addEventListener('click', heal);
 
-      updateInventory();
-      updateStatus();
-      saveGame();
-    }
-
-    // Turno inimigo
-    function enemyTurn() {
-      let damage = random(enemy.attackMin, enemy.attackMax);
-      playSound(attackSound);
-      animateAttack(enemySprite, heroSprite);
-
-      player.hp = Math.max(0, player.hp - damage);
+    // Inicialização
+    updateUI();
+  </script>
+</body>
+</html>
